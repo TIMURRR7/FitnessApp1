@@ -1,91 +1,92 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using FitnessApp2;
+using System.IO;
+using System.Text;
 
-class Program
+namespace FitnessApp2
 {
-    static void Main()
+    class Program
     {
-        Console.OutputEncoding = System.Text.Encoding.UTF8; // Русский текст в консоли
-
-
-        // 1. Статическая инициализация объектов
-        Console.WriteLine("1. Статическая инициализация объектов");
-        var days = new List<ProfileManager.Weekday>();
-        var equip = new List<ProfileManager.Equipment> { ProfileManager.Equipment.Dumbbells };
-
-        var staticUser = new ProfileManager("1", "user1", 25, ProfileManager.Gender.Male, 190, 90.0,
-            ProfileManager.Goal.LoseWeight, ProfileManager.Level.Beginner, days, equip, true);
-
-        Console.WriteLine($"   Создан статический профиль: {staticUser.GetUsername()}");
-        Console.WriteLine($"   BMI: {staticUser.CalculateBMI():F2} (ожидается ~24.93)\n");
-
-        // 2. Динамическая инициализация с new
-        Console.WriteLine("2. Динамическая инициализация (new)");
-        var muscles = new List<Activity.MuscleGroup> { Activity.MuscleGroup.LEGS };
-        var reqEquip = new List<ProfileManager.Equipment> { ProfileManager.Equipment.Dumbbells };
-
-        var dynamicActivity = new Activity("act1", "Приседания", muscles, Activity.ActivityType.STRENGTH,
-            reqEquip, ProfileManager.Level.Beginner, "Классические приседания");
-
-        Console.WriteLine($"   Динамически создан Activity: {dynamicActivity.GetTitle()}");
-        Console.WriteLine($"   Длительность: {dynamicActivity.GetDurationEstimate()} мин");
-        Console.WriteLine($"   Подходит пользователю: {dynamicActivity.MatchesUser(staticUser)} (ожидается True)\n");
-
-        // 3. Работа по ссылкам 
-        Console.WriteLine("3. Работа по ссылкам");
-        var db = new FitnessDatabase();
-        FitnessDatabase dbRef = db; 
-
-        var pushUps = new Activity("act2", "Отжимания", muscles, Activity.ActivityType.STRENGTH,
-            new List<ProfileManager.Equipment>(), ProfileManager.Level.Intermediate, "От пола");
-
-        dbRef.AddActivity(pushUps);
-        Console.WriteLine("   Упражнение добавлено через ссылку на FitnessDatabase\n");
-
-        // 4. Работа с указателями 
-        Console.WriteLine("4. Работа с указателями (ссылки на объекты)");
-        var events = new List<string>();
-        var reminder = new EventPlanner(events, "Ежедневно в 8:00");
-
-        EventPlanner reminderPtr = reminder; 
-
-        var blocks = new List<string> { "Разминка", "Основная часть" };
-        var session = new TrainingSession("sess1", "2025-10-27 18:00", 60, "Тренировка ног", blocks,
-            TrainingSession.WorkoutStatus.PLANNED);
-
-        reminderPtr.AddToSchedule(session);
-        reminderPtr.DelayNotification("sess1", 15);
-        Console.WriteLine("   Тренировка добавлена и уведомление отложено через ссылку\n");
-
-        // 5. Динамический массив объектов
-        Console.WriteLine("5. Динамический массив объектов");
-        var sessionsList = new List<TrainingSession> { session };
-
-        var scheduleArray = new TrainingSchedule[2];
-        scheduleArray[0] = new TrainingSchedule("plan1", "1", "2025-10-01", "2025-12-31", sessionsList);
-        scheduleArray[1] = new TrainingSchedule("plan2", "1", "2026-01-01", "2026-03-31", sessionsList);
-
-        Console.WriteLine("   Создан массив из 2 планов тренировок\n");
-      
-
-        // 6. Массив динамических объектов (List<T>)
-        Console.WriteLine("6. Массив динамических объектов (List<T>)");
-        var dietList = new List<DietProgram>();
-
-        var ingredients1 = new List<string> { "Курица", "Рис", "Овощи" };
-        var ingredients2 = new List<string> { "Яйца", "Овсянка", "Банан" };
-
-        dietList.Add(new DietProgram("diet1", "1", "2025-10-27", ingredients1, "600 ккал"));
-        dietList.Add(new DietProgram("diet2", "1", "2025-10-28", ingredients2, "550 ккал"));
-
-        Console.WriteLine($"   Добавлено {dietList.Count} плана питания");
-
-        foreach (var diet in dietList)
+        static void Main()
         {
-            Console.WriteLine($"   {diet.calcDailySummary()}");
-        }
+            // Установка кодировки для корректного отображения русского текста
+            Console.OutputEncoding = Encoding.UTF8;
 
-        
+            // Демонстрация using для работы с disposable объектами 
+            using (var writer = new StreamWriter("log.txt", false, Encoding.UTF8))
+                writer.WriteLine("Начало демонстрации");
+
+            // Демонстрация статического поля и метода в ProfileManager
+            Console.WriteLine("Демонстрация статического поля и метода в ProfileManager");
+            var days = new List<ProfileManager.Weekday>();
+            var equip = new List<ProfileManager.Equipment> { ProfileManager.Equipment.Dumbbells };
+
+            var user1 = new ProfileManager("1", "user1", 25, ProfileManager.Gender.Male, 190, 90.0,
+                ProfileManager.Goal.LoseWeight, ProfileManager.Level.Beginner, days, equip, true);
+            var user2 = new ProfileManager("2", "user2", 30, ProfileManager.Gender.Female, 165, 60.0,
+                ProfileManager.Goal.Health, ProfileManager.Level.Intermediate, days, equip, true);
+
+            Console.WriteLine($"Общее количество профилей: {ProfileManager.GetProfileCount()} (ожидается 2)\n");
+
+            // Демонстрация свойств (get/set) в ProfileManager
+            Console.WriteLine("Демонстрация свойств в ProfileManager");
+            Console.WriteLine($"Имя user1: {user1.Username}"); 
+            user1.Username = "updatedUser1"; 
+            Console.WriteLine($"Обновленное имя user1: {user1.Username}\n");
+
+            // Демонстрация try-catch и throw в ChangeWeight
+            Console.WriteLine("Демонстрация try-catch и throw в ProfileManager.ChangeWeight");
+            Console.WriteLine("Входные данные для изменения веса: новый вес 85.5 кг");
+            user1.ChangeWeight(85.5); 
+            Console.WriteLine($"Новый вес user1: {user1.GetCurrentWeightKg()} кг");
+
+            Console.WriteLine("Входные данные для изменения веса: новый вес -10 кг");
+            user1.ChangeWeight(-10);
+            Console.WriteLine();
+
+            //  Демонстрация CalculateBMI с обработкой исключений
+            Console.WriteLine("Демонстрация CalculateBMI с обработкой исключений");
+            Console.WriteLine($"Входные данные для BMI user1: рост {user1.GetHeightCm()} см, вес {user1.GetCurrentWeightKg()} кг");
+            Console.WriteLine($"BMI user1: {user1.CalculateBMI()}");
+
+            // Создание пользователя с нулевым ростом для демонстрации исключения
+            var badUser = new ProfileManager("bad", "bad", 20, ProfileManager.Gender.Male, 0, 85.5,
+                ProfileManager.Goal.Health, ProfileManager.Level.Beginner, days, equip, false);
+            Console.WriteLine($"Входные данные для BMI с нулевым ростом: рост 0 см, вес 85,5 кг");
+            Console.WriteLine($"BMI с нулевым ростом: {badUser.CalculateBMI()}\n");
+
+            // Демонстрация статического поля и метода в Activity
+            Console.WriteLine("Демонстрация статического поля и метода в Activity");
+            var muscles = new List<Activity.MuscleGroup> { Activity.MuscleGroup.LEGS };
+            var reqEquip = new List<ProfileManager.Equipment> { ProfileManager.Equipment.Dumbbells };
+            var act1 = new Activity("1", "Приседания", muscles, Activity.ActivityType.STRENGTH, reqEquip, ProfileManager.Level.Beginner, "");
+            var act2 = new Activity("2", "Отжимания", muscles, Activity.ActivityType.STRENGTH, new List<ProfileManager.Equipment>(), ProfileManager.Level.Intermediate, "");
+            Console.WriteLine($"Общее количество активностей: {Activity.GetActivityCount()} (ожидается 2)\n");
+
+            // Демонстрация MatchesUser с try-catch
+            Console.WriteLine("Демонстрация MatchesUser в Activity");
+            Console.WriteLine($"Activity1 подходит user1: {act1.MatchesUser(user1)}\n");
+
+            //  Демонстрация статического метода в DietProgram
+            Console.WriteLine("Демонстрация статического метода в DietProgram");
+            DietProgram.AddFoodToDatabase("Новый продукт", 100); 
+            var meals = new List<string> { "Курица", "Рис", "Новый продукт" };
+            var diet = new DietProgram("d1", "1", "2025-11-28", meals, "2000 ккал");
+            Console.WriteLine(diet.CalcDailySummary());
+
+            // Демонстрация SwapDish с обработкой исключений
+            Console.WriteLine("\nДемонстрация SwapDish с обработкой исключений");
+            diet.SwapDish("Рис", "Гречка 100г"); // Успешно
+            Console.WriteLine(diet.CalcDailySummary());
+            diet.SwapDish("Несуществующее блюдо", "Замена"); // Вызовет исключение
+
+            // Демонстрация using для чтения файла
+            Console.WriteLine("\nСодержимое log.txt:");
+            using (var reader = new StreamReader("log.txt", Encoding.UTF8))
+                Console.WriteLine(reader.ReadToEnd());
+
+            Console.WriteLine("\nДемонстрация завершена!");
+            Console.ReadKey();
+        }
     }
 }
