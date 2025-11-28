@@ -1,98 +1,73 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 
-namespace FitnessApp2
+public class DietProgram
 {
-    // Класс DietProgram: план питания на день 
-    public class DietProgram
+    // Статическая база данных продуктов с калорийностью
+    private static readonly Dictionary<string, double> FoodDatabase = new()
     {
-        // СТАТИЧЕСКАЯ БАЗА ПРОДУКТОВ
-        private static readonly Dictionary<string, double> FoodDatabase = new()
-        {
-            { "Яблоко", 78 },
-            { "Банан", 133.5 },
-            { "Курица", 165 },
-            { "Рис", 130 },
-            { "Овсянка", 68 },
-            { "Яйца", 155 },
-            { "Гречка 100г", 110 },
-            { "Овощи", 121 }
-        };
+        { "Курица", 165 }, { "Рис", 130 }, { "Новый продукт", 100 }, { "Гречка 100г", 110 }
+    };
 
-        // ПОЛЯ КЛАССА 
-        private readonly string id;                    // Уникальный идентификатор плана
-        private readonly string ownerUserId;           // ID владельца (пользователя)
-        private readonly string planDate;              // Дата плана (например, "2025-11-18")
-        private readonly List<string> dailyMeals;      // Список приёмов пищи (названия блюд)
-        private string dailyTargets;                   // Цели по калориям и КБЖУ
+    // Поля класса 
+    private string id;                              // Уникальный идентификатор плана питания
+    private string ownerUserId;                     // ID владельца (пользователя)
+    private string planDate;                        // Дата плана (например, "2025-11-26")
+    private List<string> dailyMeals;                // Список приёмов пищи (названия блюд)
+    private string dailyTargets;                    // Цели по калориям
 
-        // КОНСТРУКТОР 
-        public DietProgram(
-            string id,
-            string ownerUserId,
-            string planDate,
-            List<string> dailyMeals,
-            string dailyTargets = "2000 ккал, 150г белка")
+    // Конструктор: инициализирует план питания
+    public DietProgram(string id, string ownerUserId, string planDate, List<string> dailyMeals, string dailyTargets = "2000 ккал")
+    {
+        this.id = id;
+        this.ownerUserId = ownerUserId;
+        this.planDate = planDate;
+        this.dailyMeals = new List<string>(dailyMeals);
+        this.dailyTargets = dailyTargets;
+    }
+
+    // Метод для добавления продуктов в базу данных
+    public static void AddFoodToDatabase(string name, double calories)
+    {
+        if (!FoodDatabase.ContainsKey(name))
+            FoodDatabase[name] = calories;
+    }
+
+    // Метод замены блюда с обработкой исключений
+    public void SwapDish(string oldDish, string newDish)
+    {
+        try
         {
-            this.id = id ?? throw new ArgumentNullException(nameof(id));
-            this.ownerUserId = ownerUserId ?? throw new ArgumentNullException(nameof(ownerUserId));
-            this.planDate = planDate ?? throw new ArgumentNullException(nameof(planDate));
-            this.dailyMeals = dailyMeals != null ? new List<string>(dailyMeals) : new List<string>();
-            this.dailyTargets = dailyTargets;
+            int index = dailyMeals.IndexOf(oldDish);
+            if (index == -1) throw new KeyNotFoundException($"Блюдо \"{oldDish}\" не найдено в плане");
+            dailyMeals[index] = newDish;
+            Console.WriteLine($"[DietProgram] Блюдо \"{oldDish}\" заменено на \"{newDish}\"");
         }
-
-        //  МЕТОДЫ 
-
-        // Обновляет план при изменении веса пользователя
-        public void updateForWeightShift(double weightDelta)
+        catch (KeyNotFoundException ex) 
         {
-            int adjustment = (int)Math.Round(weightDelta / 5.0) * 300;
-            Console.WriteLine($"[DietProgram] Вес изменился на {weightDelta:+0.0;-0.0;0} кг → корректировка калорий: {adjustment:+0;-0;0} ккал");
+            Console.WriteLine($"[DietProgram] Ошибка: {ex.Message}");
         }
+    }
 
-        // Рассчитывает итоговую калорийность и возвращает строку-подведение
-        public string calcDailySummary()
+    // Метод расчета дневной калорийности и формирования отчета
+    public string CalcDailySummary()
+    {
+        double total = 0;
+        var known = new List<string>();
+        var unknown = new List<string>();
+
+
+        foreach (var meal in dailyMeals)
         {
-            double total = 0;
-            var known = new List<string>();
-            var unknown = new List<string>();
-
-            foreach (var meal in dailyMeals)
+            if (FoodDatabase.TryGetValue(meal, out double kcal))
             {
-                if (FoodDatabase.TryGetValue(meal, out double kcal))
-                {
-                    total += kcal;
-                    known.Add($"{meal}: {kcal}");
-                }
-                else
-                {
-                    unknown.Add(meal);
-                }
+                total += kcal;
+                known.Add($"{meal}: {kcal}");
             }
-
-            string unknownText = unknown.Count > 0
-                ? $", неизвестно: {string.Join(", ", unknown)}"
-                : "";
-
-            return $"День {planDate}: {total} ккал ({string.Join(" + ", known)}){unknownText}. Цель: {dailyTargets}";
+            else unknown.Add(meal);
         }
 
-        // Заменяет одно блюдо на другое
-        public void swapDish(string mealTime, string replacement)
-        {
-            int index = dailyMeals.IndexOf(mealTime);
-            if (index != -1)
-            {
-                dailyMeals[index] = replacement;
-                Console.WriteLine($"[DietProgram] Блюдо \"{mealTime}\" заменено на \"{replacement}\"");
-            }
-            else
-            {
-                Console.WriteLine($"[DietProgram] Ошибка: блюдо \"{mealTime}\" не найдено в плане");
-            }
-        }
-
-        
+        string unknownText = unknown.Count > 0 ? $", неизвестно в базе: {string.Join(", ", unknown)}" : "";
+        return $"День {planDate}: {total} ккал ({string.Join(" + ", known)}){unknownText}. Цель: {dailyTargets}";
     }
 }
