@@ -1,20 +1,24 @@
-﻿#ifndef ACTIVITY_HPP
+#ifndef ACTIVITY_HPP
 #define ACTIVITY_HPP
 
 #include <string>
 #include <set>
-#include "ProfileManager.hpp" 
+#include <memory>
+#include "ProfileManager.hpp"
 
 // Класс Activity: Описание упражнения
 class Activity {
 public:
-    enum class MuscleGroup { CHEST, BACK, LEGS }; // Мышечные группы 
+    enum class MuscleGroup { CHEST, BACK, LEGS }; // Мышечные группы
     enum class ActivityType { STRENGTH, CARDIO }; // Тип активности
 
     // Конструктор: Инициализирует упражнение
     Activity(const std::string& id, const std::string& title, const std::set<MuscleGroup>& targetedMuscles,
-        ActivityType category, const std::set<ProfileManager::Equipment>& requiredEquipment, ProfileManager::Level complexity,
-        const std::string& description);
+        ActivityType category, const std::set<ProfileManager::Equipment>& requiredEquipment,
+        ProfileManager::Level complexity, const std::string& description);
+
+    // Конструктор копирования
+    Activity(const Activity& other);
 
     // Деструктор
     ~Activity();
@@ -24,6 +28,18 @@ public:
 
     // Метод: Возвращает оценку длительности
     int getDurationEstimate() const;
+
+    // Перегрузка оператора ==
+    bool operator==(const Activity& other) const;
+
+    // Перегрузка оператора +
+    Activity operator+(const Activity& other) const;
+
+    // Использование this
+    Activity& setTitle(const std::string& title) {
+        this->title = title;
+        return *this;
+    }
 
 private:
     std::string id; // Идентификатор
