@@ -1,83 +1,65 @@
-﻿#include <iostream>
-#include <vector>
+#include <iostream>
+#include <memory>
+#include <stdexcept>
 #include <windows.h>
-#include <list>
-#include <set>
 #include "ProfileManager.hpp"
 #include "Activity.hpp"
-#include "FitnessDatabase.hpp"
-#include "TrainingSession.hpp"
-#include "TrainingSchedule.hpp"
-#include "DietProgram.hpp"
-#include "MealFormula.hpp"
-#include "EventPlanner.hpp"
 #include "ProgressTracker.hpp"
+#include "DietProgram.hpp"
+#include "TrainingSession.hpp"
 #include "FunMascot.hpp"
+#include "FitnessDatabase.hpp"
+#include "MealFormula.hpp"
+#include "SimpleUser.hpp"
 
 int main() {
+
     SetConsoleOutputCP(1251);
-    // 1. Статическая инициализация объектов
-    std::cout << "Тест 1: Статическая инициализация\n";
-    std::list<ProfileManager::Weekday> days;
-    std::set<ProfileManager::Equipment> equip = { ProfileManager::Equipment::DUMBBELLS };
-    ProfileManager staticUser("1", "user1", 25, ProfileManager::Gender::MALE, 190, 90.0, ProfileManager::Goal::LOSE_WEIGHT, ProfileManager::Level::BEGINNER, days, equip, true);
-    std::cout << "  Статический ProfileManager создан, BMI: " << staticUser.calculateBMI() << " (ожидается ~24.93)\n";
 
-    // 2. Динамическая инициализация с new/delete
-    std::cout << "\nТест 2: Динамическая инициализация\n";
-    std::set<Activity::MuscleGroup> muscles = { Activity::MuscleGroup::LEGS };
-    std::set<ProfileManager::Equipment> reqEquip = { ProfileManager::Equipment::DUMBBELLS }; // Используем ProfileManager::Equipment
-    Activity* dynamicActivity = new Activity("act1", "Приседания", muscles, Activity::ActivityType::STRENGTH, reqEquip, ProfileManager::Level::BEGINNER, "Описание техники");
-    std::cout << "  Динамический Activity создан, оценка длительности: " << dynamicActivity->getDurationEstimate() << " (ожидается 10)\n";
-    std::cout << "  Подходит ли упражнение пользователю: " << dynamicActivity->matchesUser(staticUser) << " (ожидается 1)\n";
-    delete dynamicActivity; // Освобождение памяти
-    std::cout << "  Динамический объект удалён\n";
+    try {
+        std::unique_ptr<ProfileManager> uniqueUser(new ProfileManager("1", "user1", 25, ProfileManager::Gender::MALE, 180, 75.0, ProfileManager::Goal::GAIN_MASS, ProfileManager::Level::BEGINNER, { ProfileManager::Weekday::MONDAY }, { ProfileManager::Equipment::DUMBBELLS }, true));
+        std::shared_ptr<ProfileManager> sharedUser(new ProfileManager(*uniqueUser));
+        std::cout << "Смарт-указатели: BMI = " << sharedUser->calculateBMI() << std::endl;
 
-    // 3. Работа с ссылками
-    std::cout << "\nТест 3: Работа с ссылками\n";
-    FitnessDatabase db;
-    FitnessDatabase& dbRef = db; // Ссылка на объект
-    Activity act("act2", "Отжимания", muscles, Activity::ActivityType::STRENGTH, reqEquip, ProfileManager::Level::INTERMEDIATE, "Описание");
-    dbRef.addActivity(act);
-    std::cout << "  Ссылка на FitnessDatabase: упражнение добавлено\n";
+        std::cout << "Статическое поле: Всего профилей = " << ProfileManager::getTotalProfiles() << std::endl;
 
-    // 4. Работа с указателями
-    std::cout << "\nТест 4: Работа с указателями\n";
-    std::list<std::string> events;
-    EventPlanner reminderSystem(events, "Ежедневные напоминания");
-    EventPlanner* reminderPtr = &reminderSystem;
-    std::list<std::string> blocks = { "Блок 1", "Блок 2" };
-    TrainingSession session("sess1", "2025-10-27", 60, "Тренировка", blocks, TrainingSession::WorkoutStatus::PLANNED);
-    reminderPtr->addToSchedule(session);
-    std::cout << "  Указатель на EventPlanner: расписание добавлено\n";
-    reminderPtr->delayNotification("sess1", 10);
-    std::cout << "  Указатель на EventPlanner: уведомление отложено\n";
-
-    // 5. Динамический массив объектов
-    std::cout << "\nТест 5: Динамический массив объектов\n";
-    std::list<TrainingSession> sessions = { session };
-    TrainingSchedule* scheduleArray = new TrainingSchedule[2]; // Динамический массив из 2 планов
-    scheduleArray[0] = TrainingSchedule("plan1", "1", "2025-10-01", "2025-12-31", sessions);
-    std::cout << "  Динамический массив TrainingSchedule: план 1 создан\n";
-    scheduleArray[1] = TrainingSchedule("plan2", "1", "2026-01-01", "2026-03-31", sessions);
-    std::cout << "  Динамический массив TrainingSchedule: план 2 создан\n";
-    delete[] scheduleArray;
-    std::cout << "  Динамический массив удалён\n";
-
-    // 6. Массив динамических объектов
-
-    std::cout << "\nТест 6: Массив динамических объектов\n";
-    std::vector<DietProgram*> dietVector;
-    std::list<std::string> meal1 = { "Яблоко" };
-    std::list<std::string> meal2 = { "Апельсин" };
-    dietVector.push_back(new DietProgram("diet1", "1", "2025-10-27", meal1, "150 г"));
-    dietVector.push_back(new DietProgram("diet2", "1", "2025-10-28", meal2, "150 г"));
-    std::cout << "  Массив DietProgram: добавлено " << dietVector.size() << " объекта\n";
-    for (auto* item : dietVector) {
-        std::string summary = item->calcDailySummary();
-        std::cout << "  " << summary << "\n";
-        delete item;
+        uniqueUser->changeWeight(-10);
     }
-    std::cout << "  Массив динамических объектов очищен\n";
+    catch (const std::exception& ex) {
+        std::cerr << "Перехвачено исключение: " << ex.what() << std::endl;
+    }
+
+    ProfileManager user("2", "user2", 30, ProfileManager::Gender::FEMALE, 165, 60.0, ProfileManager::Goal::LOSE_WEIGHT, ProfileManager::Level::INTERMEDIATE, { ProfileManager::Weekday::TUESDAY }, { ProfileManager::Equipment::BARBELL }, false);
+
+   
+    std::cout << "Дружественная функция для вывода: " << user << std::endl;
+
+    SimpleUser derived("3", "derived", "Доп. инфо");
+    SimpleUser copyDerived(derived);
+    std::cout << "Наследование: Доп. инфо = " << copyDerived.getAdditionalInfo() << std::endl;
+
+
+    ProgressTracker tracker("1", { {"2024-01-01", 75.0} }, { "завершена" }, 3);
+    tracker += "новая сессия";
+    std::cout << "Оператор +=: Сессия добавлена" << std::endl;
+
+    TrainingSession session("s1", "2024-01-01", 60, "Силовая тренировка", { "Отжимания", "Приседания" }, TrainingSession::WorkoutStatus::PLANNED);
+    session += "Подтягивания";
+    std::cout << "Оператор +=: Упражнение добавлено в сессию" << std::endl;
+
+    DietProgram diet("d1", "1", "2024-01-01", { "Завтрак", "Обед" }, "2000 ккал");
+    diet += "Ужин";
+    std::cout << "Оператор +=: Прием пищи добавлен" << std::endl;
+
+    
+
+    FitnessDatabase database;
+    std::unique_ptr<Activity> activityPtr(new Activity("a3", "Бег", { Activity::MuscleGroup::LEGS }, Activity::ActivityType::CARDIO, {}, ProfileManager::Level::BEGINNER, "Кардио"));
+    database.addActivity(std::move(activityPtr));
+    std::cout << "FitnessDatabase: Упражнение добавлено в базу упражнений" << std::endl;
+
+    MealFormula recipe("r1", "Протеиновый коктейль", { "протеин", "молоко" }, "300 ккал", 5);
+    std::cout << "MealFormula: " << recipe.adjustPortions(300) << std::endl;
+
     return 0;
 }
