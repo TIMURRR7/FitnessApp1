@@ -1,11 +1,13 @@
-﻿#ifndef TRAININGSCHEDULE_HPP
+#ifndef TRAININGSCHEDULE_HPP
 #define TRAININGSCHEDULE_HPP
 
 #include <string>
 #include <list>
+#include <memory>
 #include "TrainingSession.hpp"
-#include "FitnessDatabase.hpp"
-#include "ProfileManager.hpp"
+
+class FitnessDatabase;
+class ProfileManager;
 
 // Класс TrainingSchedule: План тренировок на период
 class TrainingSchedule {
@@ -16,6 +18,9 @@ public:
     // Конструктор: Инициализирует план с параметрами
     TrainingSchedule(const std::string& id, const std::string& ownerUserId, const std::string& startDate,
         const std::string& endDate, const std::list<TrainingSession>& sessions);
+
+    // Конструктор копирования
+    TrainingSchedule(const TrainingSchedule& other);
 
     // Деструктор: Освобождает ресурсы
     ~TrainingSchedule();
@@ -29,12 +34,26 @@ public:
     // Метод: Возвращает список предстоящих сессий
     std::list<TrainingSession> listNextSessions(int count) const;
 
+    // Перегрузка оператора +
+    TrainingSchedule operator+(const TrainingSession& session) const;
+
+    // Использование this
+    TrainingSchedule& setOwnerId(const std::string& ownerId) {
+        this->ownerUserId = ownerId;
+        return *this;
+    }
+
+  
+
 private:
     std::string id; // Идентификатор плана
     std::string ownerUserId; // Владелец плана
     std::string startDate; // Дата начала периода
     std::string endDate; // Дата конца периода
     std::list<TrainingSession> sessions; // Список тренировок
+
+    // Статическое поле
+    static int totalSchedules;
 };
 
 #endif
