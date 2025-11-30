@@ -1,4 +1,4 @@
-﻿#ifndef MEALFORMULA_HPP
+#ifndef MEALFORMULA_HPP
 #define MEALFORMULA_HPP
 
 #include <string>
@@ -11,6 +11,9 @@ public:
     // Конструктор: Инициализирует рецепт
     MealFormula(const std::string& id, const std::string& dishName, const std::list<std::string>& componentList,
         const std::string& nutritionPerPortion, int prepTimeMin);
+
+    // Конструктор копирования
+    MealFormula(const MealFormula& other);
 
     // Деструктор
     ~MealFormula();
