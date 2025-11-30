@@ -1,8 +1,9 @@
-﻿#ifndef DIETPROGRAM_HPP
+#ifndef DIETPROGRAM_HPP
 #define DIETPROGRAM_HPP
 
 #include <string>
 #include <list>
+#include <memory>
 
 // Класс DietProgram: План питания
 class DietProgram {
@@ -10,6 +11,9 @@ public:
     // Конструктор: Инициализирует план питания
     DietProgram(const std::string& id, const std::string& ownerUserId, const std::string& planDate,
         const std::list<std::string>& dailyMeals, const std::string& dailyTargets);
+
+    // Конструктор копирования
+    DietProgram(const DietProgram& other);
 
     // Деструктор
     ~DietProgram();
@@ -23,12 +27,27 @@ public:
     // Метод: Заменяет блюдо в плане (заглушка)
     void swapDish(const std::string& mealTime, const std::string& replacement);
 
+    bool operator==(const DietProgram& other) const;
+    DietProgram& operator+=(const std::string& meal);
+
+    // Использование this
+    DietProgram& setPlanDate(const std::string& date) {
+        this->planDate = date;
+        return *this;
+    }
+
+    // Статическое поле и метод
+    static int getTotalPrograms() { return totalPrograms; }
+
 private:
     std::string id; // Идентификатор
     std::string ownerUserId; // Владелец
     std::string planDate; // Дата плана
     std::list<std::string> dailyMeals; // Приемы пищи
     std::string dailyTargets; // Цели по нутриентам
+
+    // Статическое поле
+    static int totalPrograms;
 };
 
 #endif
