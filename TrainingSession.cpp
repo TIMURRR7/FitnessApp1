@@ -1,4 +1,5 @@
-﻿#include "TrainingSession.hpp"
+#include "TrainingSession.hpp"
+#include <stdexcept>
 
 // Конструктор: Инициализирует все поля
 TrainingSession::TrainingSession(const std::string& id, const std::string& scheduledDate, int estDurationMin,
@@ -6,6 +7,11 @@ TrainingSession::TrainingSession(const std::string& id, const std::string& sched
     WorkoutStatus currentStatus)
     : id(id), scheduledDate(scheduledDate), estDurationMin(estDurationMin), sessionName(sessionName),
     exerciseBlocks(exerciseBlocks), currentStatus(currentStatus) {}
+
+// Конструктор копирования
+TrainingSession::TrainingSession(const TrainingSession& other)
+    : id(other.id), scheduledDate(other.scheduledDate), estDurationMin(other.estDurationMin),
+    sessionName(other.sessionName), exerciseBlocks(other.exerciseBlocks), currentStatus(other.currentStatus) {}
 
 // Деструктор
 TrainingSession::~TrainingSession() {}
@@ -28,4 +34,15 @@ void TrainingSession::shiftDate(const std::string& newScheduledDate) {
 // Метод: Рассчитывает калории (заглушка)
 int TrainingSession::calcBurnedCalories(const ProfileManager& user) const {
     return 500;
+}
+
+// Перегрузка оператора ==
+bool TrainingSession::operator==(const TrainingSession& other) const {
+    return this->id == other.id;
+}
+
+// Перегрузка оператора +=
+TrainingSession& TrainingSession::operator+=(const std::string& exercise) {
+    this->exerciseBlocks.push_back(exercise);
+    return *this;
 }
