@@ -1,31 +1,40 @@
-﻿#ifndef EVENTPLANNER_HPP
+#ifndef EVENTPLANNER_HPP
 #define EVENTPLANNER_HPP
 
-#include <list>
 #include <string>
-#include "TrainingSession.hpp"
+#include <list>
+#include <memory>
 
-// Класс EventPlanner: Управление календарем и напоминаниями
+// Класс EventPlanner: Планировщик событий и уведомлений
 class EventPlanner {
 public:
-    // Конструктор: Инициализирует запланированные события и правила уведомлений
+    // Конструктор: Инициализирует поля
     EventPlanner(const std::list<std::string>& plannedEvents, const std::string& notifyRules);
+
+    // Конструктор копирования
+    EventPlanner(const EventPlanner& other);
 
     // Деструктор
     ~EventPlanner();
 
-    // Метод: Добавляет тренировку в расписание 
+    // Метод: Добавляет в расписание (заглушка)
     std::string addToSchedule(const TrainingSession& session);
 
-    // Метод: Откладывает уведомление для события
+    // Метод: Откладывает уведомление (заглушка)
     void delayNotification(const std::string& eventId, int delayMin);
 
-    // Метод: Переносит пропущенные события
+    // Метод: Переносит пропущенные занятия (заглушка)
     void rescheduleMissed();
 
+
+    EventPlanner& setNotifyRules(const std::string& rules) {
+        this->notifyRules = rules;
+        return *this;
+    }
+
 private:
-    std::list<std::string> plannedEvents; // Запланированные слоты/события
-    std::string notifyRules; // Правила напоминаний
+    std::list<std::string> plannedEvents; // Запланированные события
+    std::string notifyRules; // Правила уведомлений
 };
 
 #endif
