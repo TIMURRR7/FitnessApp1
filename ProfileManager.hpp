@@ -1,24 +1,29 @@
-﻿#ifndef PROFILEMANAGER_HPP
+#ifndef PROFILEMANAGER_HPP
 #define PROFILEMANAGER_HPP
 
 #include <string>
 #include <set>
 #include <list>
+#include <memory>
+#include <iostream>
 
 // Класс ProfileManager: Управляет профилем пользователя
 class ProfileManager {
 public:
     // Перечисления для пола, целей, уровней, дней недели и оборудования
-    enum class Gender { MALE, FEMALE}; // Пол пользователя
+    enum class Gender { MALE, FEMALE }; // Пол пользователя
     enum class Goal { LOSE_WEIGHT, GAIN_MASS, HEALTH }; // Цели (похудение, набор массы, здоровье)
     enum class Level { BEGINNER, INTERMEDIATE, ADVANCED }; // Уровень подготовки
     enum class Weekday { MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY }; // Дни недели
     enum class Equipment { DUMBBELLS, BARBELL, BENCH }; // Оборудование
 
-    // Оператор < для сравнения Equipment в std::includes
+    // Дружественная функция
     friend bool operator<(Equipment lhs, Equipment rhs) {
         return static_cast<int>(lhs) < static_cast<int>(rhs);
     }
+
+    // Дружественная функция для вывода
+    friend std::ostream& operator<<(std::ostream& os, const ProfileManager& profile);
 
     // Конструктор: Инициализирует профиль пользователя
     ProfileManager(const std::string& id, const std::string& username, int age, Gender gender, int heightCm,
@@ -26,7 +31,10 @@ public:
         const std::list<Weekday>& workoutDaysPref, const std::set<Equipment>& availableEquipment,
         bool alertsEnabled);
 
-    // Деструктор: Освобождает ресурсы 
+    // Конструктор копирования
+    ProfileManager(const ProfileManager& other);
+
+    // Деструктор: Освобождает ресурсы
     ~ProfileManager();
 
     // Метод: Обновляет вес пользователя
@@ -38,8 +46,23 @@ public:
     // Метод: Рассчитывает индекс массы тела (BMI)
     double calculateBMI() const;
 
-    // Getter: Возвращает доступное оборудование
+    
     const std::set<Equipment>& getAvailableEquipment() const { return availableEquipment; }
+
+    // Перегрузка оператора ==
+    bool operator==(const ProfileManager& other) const;
+
+    // Перегрузка оператора <
+    bool operator<(const ProfileManager& other) const;
+
+    // Использование this
+    ProfileManager& setUsername(const std::string& username) {
+        this->username = username;
+        return *this;
+    }
+
+    // Статическое поле и метод
+    static int getTotalProfiles() { return totalProfiles; }
 
 private:
     std::string id; // Уникальный идентификатор
@@ -53,6 +76,9 @@ private:
     std::list<Weekday> workoutDaysPref; // Предпочитаемые дни тренировок
     std::set<Equipment> availableEquipment; // Доступное оборудование
     bool alertsEnabled; // Включены ли уведомления
+
+    // Статическое поле
+    static int totalProfiles;
 };
 
-#endif#pragma once
+#endif
