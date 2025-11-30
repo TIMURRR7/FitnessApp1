@@ -1,11 +1,9 @@
-﻿#ifndef FUNMASCOT_HPP
+#ifndef FUNMASCOT_HPP
 #define FUNMASCOT_HPP
 
 #include <string>
 #include <set>
-#include "ProfileManager.hpp"
-#include "ProgressTracker.hpp"
-#include "TrainingSession.hpp" 
+#include "TrainingSession.hpp"
 
 // Класс FunMascot: Логика маскота (котика)
 class FunMascot {
@@ -16,17 +14,14 @@ public:
     FunMascot(const std::string& userId, MascotMood currentMood, int experiencePoints,
         const std::set<std::string>& unlockedSkins);
 
+    // Конструктор копирования
+    FunMascot(const FunMascot& other);
+
     // Деструктор
     ~FunMascot();
 
     // Метод: Реакция на статус тренировки
     std::string respondToSession(TrainingSession::WorkoutStatus outcome) const;
-
-    // Метод: Начисляет очки опыта
-    void addExperience(int points);
-
-    // Метод: Генерирует мотивационное сообщение
-    std::string generateMotivation(const ProfileManager& user, const ProgressTracker& tracker) const;
 
 private:
     std::string userId; // Идентификатор пользователя
