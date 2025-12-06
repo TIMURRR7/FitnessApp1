@@ -1,7 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
+using System.Collections.Generic;
 
 namespace FitnessApp2
 {
@@ -9,84 +8,88 @@ namespace FitnessApp2
     {
         static void Main()
         {
-            // Установка кодировки для корректного отображения русского текста
             Console.OutputEncoding = Encoding.UTF8;
 
-            // Демонстрация using для работы с disposable объектами 
-            using (var writer = new StreamWriter("log.txt", false, Encoding.UTF8))
-                writer.WriteLine("Начало демонстрации");
 
-            // Демонстрация статического поля и метода в ProfileManager
-            Console.WriteLine("Демонстрация статического поля и метода в ProfileManager");
-            var days = new List<ProfileManager.Weekday>();
-            var equip = new List<ProfileManager.Equipment> { ProfileManager.Equipment.Dumbbells };
+            // 1. Производные классы и наследование
+            Console.WriteLine("Производные классы:");
+            CardioActivity cardio = new CardioActivity(5.0);
+            StrengthActivity strength = new StrengthActivity(10);
+            FlexibilityActivity flexibility = new FlexibilityActivity(30);
+            BalanceActivity balance = new BalanceActivity(7);
 
-            var user1 = new ProfileManager("1", "user1", 25, ProfileManager.Gender.Male, 190, 90.0,
-                ProfileManager.Goal.LoseWeight, ProfileManager.Level.Beginner, days, equip, true);
-            var user2 = new ProfileManager("2", "user2", 30, ProfileManager.Gender.Female, 165, 60.0,
-                ProfileManager.Goal.Health, ProfileManager.Level.Intermediate, days, equip, true);
+            Console.WriteLine($"Кардио активность: {cardio.Title}");
+            Console.WriteLine($"Силовая активность: {strength.Title}");
+            Console.WriteLine($"Гибкость: {flexibility.Title}");
+            Console.WriteLine($"Баланс: {balance.Title}\n");
 
-            Console.WriteLine($"Общее количество профилей: {ProfileManager.GetProfileCount()} (ожидается 2)\n");
+            // 2. Protected модификатор (доступ к baseCaloriesPerMin)
+            Console.WriteLine("Protected модификатор:");
+            Console.WriteLine($"Базовые калории в минуту (protected): {cardio.GetType().GetField("baseCaloriesPerMin", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(cardio)}");
+            Console.WriteLine($"Калории кардио: {cardio.EstimateCalories(10)}");
+            Console.WriteLine($"Калории силовые: {strength.EstimateCalories(10)}");
+            Console.WriteLine($"Калории гибкость: {flexibility.EstimateCalories(10)}");
+            Console.WriteLine($"Калории баланс: {balance.EstimateCalories(10)}\n");
 
-            // Демонстрация свойств (get/set) в ProfileManager
-            Console.WriteLine("Демонстрация свойств в ProfileManager");
-            Console.WriteLine($"Имя user1: {user1.Username}"); 
-            user1.Username = "updatedUser1"; 
-            Console.WriteLine($"Обновленное имя user1: {user1.Username}\n");
+            // 3. Перегрузка методов (с вызовом base и без)
+            Console.WriteLine("Перегрузка методов:");
+            Console.WriteLine($"Силовые (с вызовом base): {strength.EstimateCalories(10)}");
+            Console.WriteLine($"Баланс (без вызова base): {balance.EstimateCalories(10)}\n");
 
-            // Демонстрация try-catch и throw в ChangeWeight
-            Console.WriteLine("Демонстрация try-catch и throw в ProfileManager.ChangeWeight");
-            Console.WriteLine("Входные данные для изменения веса: новый вес 85.5 кг");
-            user1.ChangeWeight(85.5); 
-            Console.WriteLine($"Новый вес user1: {user1.GetCurrentWeightKg()} кг");
+            // 4. Виртуальные функции и полиморфизм
+            Console.WriteLine("Виртуальные функции:");
+            FitnessComponent profile = new ProfileManager("1", "user", 25, ProfileManager.Gender.Male, 180, 75.0,
+                ProfileManager.Goal.GainMass, ProfileManager.Level.Intermediate);
 
-            Console.WriteLine("Входные данные для изменения веса: новый вес -10 кг");
-            user1.ChangeWeight(-10);
-            Console.WriteLine();
+            profile.CallVirtual(); // Вызов невиртуальной функцией
+            Console.WriteLine($"Полиморфизм через базовый класс: {profile.CalculateSomething()}");
 
-            //  Демонстрация CalculateBMI с обработкой исключений
-            Console.WriteLine("Демонстрация CalculateBMI с обработкой исключений");
-            Console.WriteLine($"Входные данные для BMI user1: рост {user1.GetHeightCm()} см, вес {user1.GetCurrentWeightKg()} кг");
-            Console.WriteLine($"BMI user1: {user1.CalculateBMI()}");
+            // Демонстрация через указатели
+            Activity activityRef = cardio;
+            Console.WriteLine($"Через указатель на базовый класс: {activityRef.EstimateCalories(10)}");
 
-            // Создание пользователя с нулевым ростом для демонстрации исключения
-            var badUser = new ProfileManager("bad", "bad", 20, ProfileManager.Gender.Male, 0, 85.5,
-                ProfileManager.Goal.Health, ProfileManager.Level.Beginner, days, equip, false);
-            Console.WriteLine($"Входные данные для BMI с нулевым ростом: рост 0 см, вес 85,5 кг");
-            Console.WriteLine($"BMI с нулевым ростом: {badUser.CalculateBMI()}\n");
+            activityRef = strength;
+            Console.WriteLine($"Через указатель на производный класс: {activityRef.EstimateCalories(10)}\n");
 
-            // Демонстрация статического поля и метода в Activity
-            Console.WriteLine("Демонстрация статического поля и метода в Activity");
-            var muscles = new List<Activity.MuscleGroup> { Activity.MuscleGroup.LEGS };
-            var reqEquip = new List<ProfileManager.Equipment> { ProfileManager.Equipment.Dumbbells };
-            var act1 = new Activity("1", "Приседания", muscles, Activity.ActivityType.STRENGTH, reqEquip, ProfileManager.Level.Beginner, "");
-            var act2 = new Activity("2", "Отжимания", muscles, Activity.ActivityType.STRENGTH, new List<ProfileManager.Equipment>(), ProfileManager.Level.Intermediate, "");
-            Console.WriteLine($"Общее количество активностей: {Activity.GetActivityCount()} (ожидается 2)\n");
+            // 5. Клонирование (поверхностное и глубокое)
+            Console.WriteLine("Клонирование:");
+            Activity original = new CardioActivity(10.0);
+            Activity shallowClone = (Activity)original.Clone();
+            Activity deepClone = original.DeepClone();
 
-            // Демонстрация MatchesUser с try-catch
-            Console.WriteLine("Демонстрация MatchesUser в Activity");
-            Console.WriteLine($"Activity1 подходит user1: {act1.MatchesUser(user1)}\n");
+            Console.WriteLine("Оригинал, поверхностный и глубокий клоны созданы");
+            Console.WriteLine($"Оригинал калории: {original.EstimateCalories(10)}");
+            Console.WriteLine($"Поверхностный клон калории: {shallowClone.EstimateCalories(10)}");
+            Console.WriteLine($"Глубокий клон калории: {deepClone.EstimateCalories(10)}\n");
 
-            //  Демонстрация статического метода в DietProgram
-            Console.WriteLine("Демонстрация статического метода в DietProgram");
-            DietProgram.AddFoodToDatabase("Новый продукт", 100); 
-            var meals = new List<string> { "Курица", "Рис", "Новый продукт" };
-            var diet = new DietProgram("d1", "1", "2025-11-28", meals, "2000 ккал");
-            Console.WriteLine(diet.CalcDailySummary());
+            // 6. Конструкторы производных классов
+            Console.WriteLine("Конструкторы производных классов:");
+            TrackableActivity trackable = new TrackableActivity("track_1", "Отслеживаемая активность",
+                new[] { Activity.MuscleGroup.CHEST, Activity.MuscleGroup.ARMS }, Activity.ActivityType.STRENGTH,
+                new[] { ProfileManager.Equipment.Dumbbells }, Activity.Level.INTERMEDIATE, "Отслеживаемое упражнение");
+            Console.WriteLine($"Trackable активность создана: {trackable.Title}\n");
 
-            // Демонстрация SwapDish с обработкой исключений
-            Console.WriteLine("\nДемонстрация SwapDish с обработкой исключений");
-            diet.SwapDish("Рис", "Гречка 100г"); // Успешно
-            Console.WriteLine(diet.CalcDailySummary());
-            diet.SwapDish("Несуществующее блюдо", "Замена"); // Вызовет исключение
+            // 7. Абстрактные классы
+            Console.WriteLine($"Абстрактный метод GetInfo: {profile.GetInfo()}");
+            FitnessComponent clonedProfile = profile.Clone();
+            Console.WriteLine($"Клонированный объект: {clonedProfile.GetInfo()}\n");
 
-            // Демонстрация using для чтения файла
-            Console.WriteLine("\nСодержимое log.txt:");
-            using (var reader = new StreamReader("log.txt", Encoding.UTF8))
-                Console.WriteLine(reader.ReadToEnd());
+            // 8. Интерфейсы
+            Console.WriteLine("Интерфейсы:");
+            ITrackable trackableInterface = trackable;
+            ICustomizable customizableInterface = trackable;
 
-            Console.WriteLine("\nДемонстрация завершена!");
-            Console.ReadKey();
+            trackableInterface.LogProgress(DateTime.Now);
+            trackableInterface.LogProgress(DateTime.Now.AddDays(1));
+            Console.WriteLine($"Отслеживание: {trackableInterface.GetTrackingInfo()}");
+
+            customizableInterface.AddCustomModification("Увеличить вес");
+            customizableInterface.AddCustomModification("Добавить подходы");
+            Console.WriteLine($"Модификации: {string.Join(", ", customizableInterface.GetModifications())}");
+
+            // Множественное наследование (абстрактный класс + интерфейсы)
+            Console.WriteLine($"Множественное наследование - калории баланс с модификациями: {trackable.EstimateCalories(10)}\n");
+
         }
     }
 }
