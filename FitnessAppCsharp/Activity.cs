@@ -1,66 +1,91 @@
+// Activity.cs
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
-public class Activity
+namespace FitnessApp2
 {
-    // Перечисления
-    public enum MuscleGroup { CHEST, BACK, LEGS }                    // Мышечные группы для целевых мышц
-    public enum ActivityType { STRENGTH, CARDIO }                    // Тип упражнения: силовое или кардио
-
-    // Статическое поле для подсчета количества созданных активностей
-    private static int activityCount = 0;
-    // Статический метод для получения общего количества активностей
-    public static int GetActivityCount() => activityCount;
-
-    // Поля класса 
-    private string id;                                               // Уникальный идентификатор упражнения
-    private string title;                                            // Название упражнения
-    private List<MuscleGroup> targetedMuscles;                       // Список задействованных мышечных групп
-    private ActivityType category;                                   // Тип активности (сила / кардио)
-    private List<ProfileManager.Equipment> requiredEquipment;        // Необходимое оборудование
-    private ProfileManager.Level complexity;                         // Уровень сложности
-    private string description;                                      // Описание техники выполнения упражнения
-
-    // Конструктор: инициализирует все поля упражнения
-    public Activity(string id, string title, List<MuscleGroup> targetedMuscles,
-        ActivityType category, List<ProfileManager.Equipment> requiredEquipment,
-        ProfileManager.Level complexity, string description)
+    public class Activity : ICloneable
     {
-        // Использование this 
-        this.id = id;
-        this.title = title;
-        this.targetedMuscles = targetedMuscles;
-        this.category = category;
-        this.requiredEquipment = requiredEquipment ?? new List<ProfileManager.Equipment>();
-        this.complexity = complexity;
-        this.description = description;
-        
-        activityCount++;
-    }
+        public enum MuscleGroup { CHEST, BACK, LEGS, SHOULDERS, ARMS, CORE }
+        public enum ActivityType { STRENGTH, CARDIO, FLEXIBILITY, BALANCE }
+        public enum Level { BEGINNER, INTERMEDIATE, ADVANCED }
 
-    // Метод проверки совместимости упражнения с пользователем с обработкой исключений
-    public bool MatchesUser(ProfileManager user)
-    {
-        try
+        private static int activityCount = 0;
+        public static int GetActivityCount() => activityCount;
+
+        private string id;
+        private string title;
+        private HashSet<MuscleGroup> targetMuscles = new HashSet<MuscleGroup>();
+        private ActivityType category;
+        private HashSet<ProfileManager.Equipment> requiredEquipment = new HashSet<ProfileManager.Equipment>();
+        private Level complexity;
+        private string description;
+
+        protected int baseCaloriesPerMin = 6;
+
+        public Activity(string id, string title,
+            IEnumerable<MuscleGroup> targetedMuscles = null,
+            ActivityType category = ActivityType.STRENGTH,
+            IEnumerable<ProfileManager.Equipment> requiredEquipment = null,
+            Level complexity = Level.BEGINNER,
+            string description = "")
         {
-            // Проверка уровня сложности (не должно быть выше уровня пользователя)
-            if (this.complexity > user.GetFitnessLevel()) return false;
+            this.id = id;
+            this.title = title;
+            this.category = category;
+            this.complexity = complexity;
+            this.description = description ?? "";
 
-            // Проверка оборудования: у пользователя должно быть всё необходимое
-            foreach (var eq in this.requiredEquipment)
-                if (!user.GetAvailableEquipment().Contains(eq))
-                    return false;
-            return true;
+            if (targetedMuscles != null)
+                this.targetMuscles = new HashSet<MuscleGroup>(targetedMuscles);
+            if (requiredEquipment != null)
+                this.requiredEquipment = new HashSet<ProfileManager.Equipment>(requiredEquipment);
+
+            activityCount++;
         }
-        catch (Exception ex) 
+
+        public virtual int EstimateCalories(int durationMinutes)
         {
-            Console.WriteLine($"Ошибка при проверке совместимости упражнения: {ex.Message}");
-            return false;
+            return baseCaloriesPerMin * durationMinutes;
         }
-    }
 
-    public ProfileManager.Level GetComplexity() => complexity;
-    public List<ProfileManager.Equipment> GetRequiredEquipment() => requiredEquipment;
-    public string GetTitle() => title;
-    public ActivityType GetCategory() => category;
+        public List<Activity> FindSimilar(ActivityType type)
+        {
+            return new List<Activity>();
+        }
+
+        public bool IsCompatible(ProfileManager user)
+        {
+            if (user == null) return false;
+            try
+            {
+                if ((int)this.complexity > (int)user.FitnessLevel) return false;
+                return requiredEquipment.All(eq => user.GetAvailableEquipment().Contains(eq));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при проверке совместимости: {ex.Message}");
+                return false;
+            }
+        }
+
+        public object Clone()
+        {
+            return this.MemberwiseClone();
+        }
+
+        public Activity DeepClone()
+        {
+            Activity clone = (Activity)this.MemberwiseClone();
+            clone.targetMuscles = new HashSet<MuscleGroup>(this.targetMuscles);
+            clone.requiredEquipment = new HashSet<ProfileManager.Equipment>(this.requiredEquipment);
+            return clone;
+        }
+
+        public string Id => id;
+        public string Title => title;
+        public ActivityType Category => category;
+        public Level Complexity => complexity;
+    }
 }
