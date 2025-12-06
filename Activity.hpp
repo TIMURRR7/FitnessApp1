@@ -3,43 +3,38 @@
 
 #include <string>
 #include <set>
-#include <memory>
+#include <vector>
 #include "ProfileManager.hpp"
 
-// Класс Activity: Описание упражнения
 class Activity {
 public:
-    enum class MuscleGroup { CHEST, BACK, LEGS }; // Мышечные группы
-    enum class ActivityType { STRENGTH, CARDIO }; // Тип активности
+    enum class MuscleGroup { CHEST, BACK, LEGS, SHOULDERS, ARMS, CORE };
+    enum class ActivityType { STRENGTH, CARDIO, FLEXIBILITY, BALANCE };
 
-    // Конструктор: Инициализирует упражнение
-    Activity(const std::string& id, const std::string& title, const std::set<MuscleGroup>& targetedMuscles,
-        ActivityType category, const std::set<ProfileManager::Equipment>& requiredEquipment,
-        ProfileManager::Level complexity, const std::string& description);
+    Activity() = default;
+    Activity(const std::string& id, const std::string& title,
+        const std::set<MuscleGroup>& targetedMuscles = {},
+        ActivityType type = ActivityType::STRENGTH,
+        const std::set<ProfileManager::Equipment>& equipment = {},
+        ProfileManager::Level level = ProfileManager::Level::BEGINNER,
+        const std::string& description = "");
 
-    // Конструктор копирования
-    Activity(const Activity& other);
+    Activity(const Activity& other) = default;
+    virtual ~Activity() = default;
 
-    // Деструктор
-    ~Activity();
+    virtual int estimateCalories(int durationMinutes) const;
 
-    // Метод: Проверяет, подходит ли упражнение пользователю
-    bool matchesUser(const ProfileManager& user) const;
+    std::vector<Activity> findSimilar(ActivityType type) const;
+    bool isCompatible(const ProfileManager& user) const;
 
-    // Метод: Возвращает оценку длительности
-    int getDurationEstimate() const;
+    Activity deepClone() const;
 
-    // Перегрузка оператора ==
-    bool operator==(const Activity& other) const;
+    bool operator==(const Activity& other) const { return id == other.id; }
 
-    // Перегрузка оператора +
-    Activity operator+(const Activity& other) const;
+    const std::string& getTitle() const { return title; }
 
-    // Использование this
-    Activity& setTitle(const std::string& title) {
-        this->title = title;
-        return *this;
-    }
+protected:
+    int baseCaloriesPerMin = 6;
 
 private:
     std::string id; // Идентификатор
@@ -51,4 +46,4 @@ private:
     std::string description; // Описание
 };
 
-#endif
+#endif 
