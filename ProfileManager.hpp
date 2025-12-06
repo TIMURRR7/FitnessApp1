@@ -6,9 +6,10 @@
 #include <list>
 #include <memory>
 #include <iostream>
+#include "FitnessComponent.hpp"
 
 // Класс ProfileManager: Управляет профилем пользователя
-class ProfileManager {
+class ProfileManager : public FitnessComponent {
 public:
     // Перечисления для пола, целей, уровней, дней недели и оборудования
     enum class Gender { MALE, FEMALE }; // Пол пользователя
@@ -21,7 +22,6 @@ public:
     friend bool operator<(Equipment lhs, Equipment rhs) {
         return static_cast<int>(lhs) < static_cast<int>(rhs);
     }
-
     // Дружественная функция для вывода
     friend std::ostream& operator<<(std::ostream& os, const ProfileManager& profile);
 
@@ -35,7 +35,7 @@ public:
     ProfileManager(const ProfileManager& other);
 
     // Деструктор: Освобождает ресурсы
-    ~ProfileManager();
+    ~ProfileManager() override;
 
     // Метод: Обновляет вес пользователя
     void changeWeight(double newWeight);
@@ -46,7 +46,6 @@ public:
     // Метод: Рассчитывает индекс массы тела (BMI)
     double calculateBMI() const;
 
-    
     const std::set<Equipment>& getAvailableEquipment() const { return availableEquipment; }
 
     // Перегрузка оператора ==
@@ -55,7 +54,6 @@ public:
     // Перегрузка оператора <
     bool operator<(const ProfileManager& other) const;
 
-    // Использование this
     ProfileManager& setUsername(const std::string& username) {
         this->username = username;
         return *this;
@@ -63,6 +61,19 @@ public:
 
     // Статическое поле и метод
     static int getTotalProfiles() { return totalProfiles; }
+
+    // Реализация абстрактных методов
+    std::string getInfo() const override {
+        return "Profile: " + username + " (ID: " + id + ")";
+    }
+
+    FitnessComponent* clone() const override {
+        return new ProfileManager(*this);
+    }
+
+    double calculateSomething() const override {
+        return calculateBMI();
+    }
 
 private:
     std::string id; // Уникальный идентификатор
@@ -76,8 +87,6 @@ private:
     std::list<Weekday> workoutDaysPref; // Предпочитаемые дни тренировок
     std::set<Equipment> availableEquipment; // Доступное оборудование
     bool alertsEnabled; // Включены ли уведомления
-
-    // Статическое поле
     static int totalProfiles;
 };
 
