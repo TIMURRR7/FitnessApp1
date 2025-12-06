@@ -2,64 +2,56 @@
 #include <memory>
 #include <stdexcept>
 #include <windows.h>
+
 #include "ProfileManager.hpp"
-#include "Activity.hpp"
-#include "ProgressTracker.hpp"
-#include "DietProgram.hpp"
-#include "TrainingSession.hpp"
-#include "FunMascot.hpp"
-#include "FitnessDatabase.hpp"
-#include "MealFormula.hpp"
 #include "SimpleUser.hpp"
+#include "Activity.hpp"
+#include "CardioActivity.hpp"
+#include "StrengthActivity.hpp"
+#include "FitnessComponent.hpp"
 
 int main() {
-
     SetConsoleOutputCP(1251);
 
-    try {
-        std::unique_ptr<ProfileManager> uniqueUser(new ProfileManager("1", "user1", 25, ProfileManager::Gender::MALE, 180, 75.0, ProfileManager::Goal::GAIN_MASS, ProfileManager::Level::BEGINNER, { ProfileManager::Weekday::MONDAY }, { ProfileManager::Equipment::DUMBBELLS }, true));
-        std::shared_ptr<ProfileManager> sharedUser(new ProfileManager(*uniqueUser));
-        std::cout << "Смарт-указатели: BMI = " << sharedUser->calculateBMI() << std::endl;
+    // Демонстрация для лабораторной
+    // Производные классы
+    SimpleUser du("1", "du", "email", "2000-01-01", ProfileManager::Gender::MALE, 180, 80.0,
+        ProfileManager::Goal::GAIN_MASS, ProfileManager::Level::INTERMEDIATE, "info");
+    std::cout << "Инфо simple: " << du.getAdditionalInfo() << std::endl;
 
-        std::cout << "Статическое поле: Всего профилей = " << ProfileManager::getTotalProfiles() << std::endl;
+    CardioActivity cardio(5.0); 
+    std::cout << "Калории кардио (protected): " << cardio.estimateCalories(10) << std::endl;
 
-        uniqueUser->changeWeight(-10);
-    }
-    catch (const std::exception& ex) {
-        std::cerr << "Перехвачено исключение: " << ex.what() << std::endl;
-    }
+    StrengthActivity strength("s1", "Приседания", { Activity::MuscleGroup::LEGS },
+        { ProfileManager::Equipment::DUMBBELLS }, ProfileManager::Level::INTERMEDIATE,
+        "Силовое", 4, 12, 100.0);
+    std::cout << "Калории strength (с base): " << strength.estimateCalories(10) << std::endl;
+    std::cout << "Калории cardio (без base): " << cardio.estimateCalories(10) << std::endl;
 
-    ProfileManager user("2", "user2", 30, ProfileManager::Gender::FEMALE, 165, 60.0, ProfileManager::Goal::LOSE_WEIGHT, ProfileManager::Level::INTERMEDIATE, { ProfileManager::Weekday::TUESDAY }, { ProfileManager::Equipment::BARBELL }, false);
+    // Виртуальные функции
+    FitnessComponent* ent = new SimpleUser("5", "du2", "email2", "1995-05-05", ProfileManager::Gender::MALE, 175, 70.0,
+        ProfileManager::Goal::LOSE_WEIGHT, ProfileManager::Level::ADVANCED, "info2");
+    ent->callVirtual();
+    std::cout << "Полиморфизм: " << ent->calculateSomething() << std::endl;
 
-   
-    std::cout << "Дружественная функция для вывода: " << user << std::endl;
+    // Без virtual calculateSomething: вызовет base версию (0.0)
+    delete ent; 
 
-    SimpleUser derived("3", "derived", "Доп. инфо");
-    SimpleUser copyDerived(derived);
-    std::cout << "Наследование: Доп. инфо = " << copyDerived.getAdditionalInfo() << std::endl;
+    // Клонирование
+    Activity original("orig", "Бег", { Activity::MuscleGroup::LEGS }, Activity::ActivityType::CARDIO,
+        {}, ProfileManager::Level::BEGINNER, "Пробежка");
+    Activity shallow = original;
+    Activity deep = original.deepClone();  // deepClone() возвращает Activity 
+    std::cout << "Клоны созданы" << std::endl;
 
+    // Абстрактный класс
+    // FitnessComponent* absEnt = new FitnessComponent();
 
-    ProgressTracker tracker("1", { {"2024-01-01", 75.0} }, { "завершена" }, 3);
-    tracker += "новая сессия";
-    std::cout << "Оператор +=: Сессия добавлена" << std::endl;
-
-    TrainingSession session("s1", "2024-01-01", 60, "Силовая тренировка", { "Отжимания", "Приседания" }, TrainingSession::WorkoutStatus::PLANNED);
-    session += "Подтягивания";
-    std::cout << "Оператор +=: Упражнение добавлено в сессию" << std::endl;
-
-    DietProgram diet("d1", "1", "2024-01-01", { "Завтрак", "Обед" }, "2000 ккал");
-    diet += "Ужин";
-    std::cout << "Оператор +=: Прием пищи добавлен" << std::endl;
-
-    
-
-    FitnessDatabase database;
-    std::unique_ptr<Activity> activityPtr(new Activity("a3", "Бег", { Activity::MuscleGroup::LEGS }, Activity::ActivityType::CARDIO, {}, ProfileManager::Level::BEGINNER, "Кардио"));
-    database.addActivity(std::move(activityPtr));
-    std::cout << "FitnessDatabase: Упражнение добавлено в базу упражнений" << std::endl;
-
-    MealFormula recipe("r1", "Протеиновый коктейль", { "протеин", "молоко" }, "300 ккал", 5);
-    std::cout << "MealFormula: " << recipe.adjustPortions(300) << std::endl;
+    ProfileManager baseUser("6", "base", 28, ProfileManager::Gender::FEMALE, 165, 58.0,
+        ProfileManager::Goal::LOSE_WEIGHT, ProfileManager::Level::BEGINNER,
+        { ProfileManager::Weekday::MONDAY }, { ProfileManager::Equipment::DUMBBELLS }, true);
+    du = baseUser;
+    std::cout << "Присваивание от base: " << du.getAdditionalInfo() << std::endl;
 
     return 0;
 }
