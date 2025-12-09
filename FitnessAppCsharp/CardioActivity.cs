@@ -1,4 +1,3 @@
-// CardioActivity.cs
 namespace FitnessApp2
 {
     public class CardioActivity : Activity
@@ -14,7 +13,8 @@ namespace FitnessApp2
 
         public override int EstimateCalories(int duration)
         {
-            return (int)(duration * 10 + baseCaloriesPerMin);
+            // Делегирование с дополнительными параметрами (дистанция для кардио)
+            return _calorieCalculator.CalculateCalories(baseCaloriesPerMin, duration, Category, distance);
         }
     }
 }
