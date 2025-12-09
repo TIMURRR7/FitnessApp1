@@ -1,4 +1,3 @@
-// Activity.cs
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +13,14 @@ namespace FitnessApp2
         private static int activityCount = 0;
         public static int GetActivityCount() => activityCount;
 
+        // Статическая конфигурация - калькулятор по умолчанию для всех активностей
+        private static ICalorieCalculator _defaultCalculator = new BasicCalorieCalculator();
+        public static ICalorieCalculator DefaultCalculator
+        {
+            get => _defaultCalculator;
+            set => _defaultCalculator = value ?? throw new ArgumentNullException(nameof(value));
+        }
+
         private string id;
         private string title;
         private HashSet<MuscleGroup> targetMuscles = new HashSet<MuscleGroup>();
@@ -24,12 +31,16 @@ namespace FitnessApp2
 
         protected int baseCaloriesPerMin = 6;
 
+        // Делегирование поведения расчета калорий
+        protected ICalorieCalculator _calorieCalculator;
+
         public Activity(string id, string title,
             IEnumerable<MuscleGroup> targetedMuscles = null,
             ActivityType category = ActivityType.STRENGTH,
             IEnumerable<ProfileManager.Equipment> requiredEquipment = null,
             Level complexity = Level.BEGINNER,
-            string description = "")
+            string description = "",
+            ICalorieCalculator calculator = null)
         {
             this.id = id;
             this.title = title;
@@ -42,12 +53,16 @@ namespace FitnessApp2
             if (requiredEquipment != null)
                 this.requiredEquipment = new HashSet<ProfileManager.Equipment>(requiredEquipment);
 
+            // Делегирование: используем переданный калькулятор или калькулятор по умолчанию
+            _calorieCalculator = calculator ?? _defaultCalculator;
+
             activityCount++;
         }
 
         public virtual int EstimateCalories(int durationMinutes)
         {
-            return baseCaloriesPerMin * durationMinutes;
+            // Делегирование расчета калорий калькулятору
+            return _calorieCalculator.CalculateCalories(baseCaloriesPerMin, durationMinutes, category);
         }
 
         public List<Activity> FindSimilar(ActivityType type)
@@ -72,16 +87,29 @@ namespace FitnessApp2
 
         public object Clone()
         {
-            return this.MemberwiseClone();
+            Activity clone = (Activity)this.MemberwiseClone();
+     
+            return clone;
         }
 
         public Activity DeepClone()
         {
             Activity clone = (Activity)this.MemberwiseClone();
             clone.targetMuscles = new HashSet<MuscleGroup>(this.targetMuscles);
-            clone.requiredEquipment = new HashSet<ProfileManager.Equipment>(this.requiredEquipment);
+            clone.requiredEquipment = new HashSet<ProfileManager.Equipment>(this.requiredEquipment);        
             return clone;
         }
+
+        
+        // Динамическая конфигурация: смена калькулятора во время выполнения
+      
+        public void SetCalculator(ICalorieCalculator calculator)
+        {
+            _calorieCalculator = calculator ?? throw new ArgumentNullException(nameof(calculator));
+        }
+
+        // Получить текущий калькулятор 
+        public ICalorieCalculator GetCalculator() => _calorieCalculator;
 
         public string Id => id;
         public string Title => title;
