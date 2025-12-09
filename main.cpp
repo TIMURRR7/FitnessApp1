@@ -1,57 +1,73 @@
+#include "StrengthActivity.hpp"
+#include "StandardExecutionStrategy.hpp"
+#include "ProgressiveOverloadStrategy.hpp"
+#include "PyramidStrategy.hpp"
+#include "ProfileManager.hpp"
+#include "Activity.hpp"
 #include <iostream>
-#include <memory>
+#include <set>
 #include <stdexcept>
 #include <windows.h>
-
-#include "ProfileManager.hpp"
-#include "SimpleUser.hpp"
-#include "Activity.hpp"
-#include "CardioActivity.hpp"
-#include "StrengthActivity.hpp"
-#include "FitnessComponent.hpp"
+#include <memory>
 
 int main() {
     SetConsoleOutputCP(1251);
+    std::cout << "=== Демонстрация паттерна делегирования ===\n" << std::endl;
 
-    // Демонстрация для лабораторной
-    // Производные классы
-    SimpleUser du("1", "du", "email", "2000-01-01", ProfileManager::Gender::MALE, 180, 80.0,
-        ProfileManager::Goal::GAIN_MASS, ProfileManager::Level::INTERMEDIATE, "info");
-    std::cout << "Инфо simple: " << du.getAdditionalInfo() << std::endl;
+    // Создаем наборы данных для упражнения
+    std::set<Activity::MuscleGroup> muscles = { Activity::MuscleGroup::CHEST };
+    std::set<ProfileManager::Equipment> equipment = { ProfileManager::Equipment::DUMBBELLS };
 
-    CardioActivity cardio(5.0); 
-    std::cout << "Калории кардио (protected): " << cardio.estimateCalories(10) << std::endl;
+    // 1. СТАТИЧЕСКОЕ КОНФИГУРИРОВАНИЕ
+    std::cout << "1. Статическое конфигурирование стратегий:" << std::endl;
+    std::cout << "==========================================" << std::endl;
 
-    StrengthActivity strength("s1", "Приседания", { Activity::MuscleGroup::LEGS },
-        { ProfileManager::Equipment::DUMBBELLS }, ProfileManager::Level::INTERMEDIATE,
-        "Силовое", 4, 12, 100.0);
-    std::cout << "Калории strength (с base): " << strength.estimateCalories(10) << std::endl;
-    std::cout << "Калории cardio (без base): " << cardio.estimateCalories(10) << std::endl;
+    StrengthActivity standardExercise("bench_press_std", "Жим лежа (стандартный)",
+        muscles, equipment, ProfileManager::Level::INTERMEDIATE, "Классический жим лежа",
+        3, 10, 50.0, StrengthActivity::ExecutionType::STANDARD);
 
-    // Виртуальные функции
-    FitnessComponent* ent = new SimpleUser("5", "du2", "email2", "1995-05-05", ProfileManager::Gender::MALE, 175, 70.0,
-        ProfileManager::Goal::LOSE_WEIGHT, ProfileManager::Level::ADVANCED, "info2");
-    ent->callVirtual();
-    std::cout << "Полиморфизм: " << ent->calculateSomething() << std::endl;
+    StrengthActivity progressiveExercise("bench_press_prog", "Жим лежа (прогрессивная перегрузка)",
+        muscles, equipment, ProfileManager::Level::INTERMEDIATE, "Жим с постепенным увеличением веса",
+        3, 8, 45.0, StrengthActivity::ExecutionType::PROGRESSIVE_OVERLOAD);
 
-    // Без virtual calculateSomething: вызовет base версию (0.0)
-    delete ent; 
+    StrengthActivity pyramidExercise("bench_press_pyr", "Жим лежа (пирамида)",
+        muscles, equipment, ProfileManager::Level::ADVANCED, "Пирамидальная тренировка",
+        4, 12, 40.0, StrengthActivity::ExecutionType::PYRAMID);
 
-    // Клонирование
-    Activity original("orig", "Бег", { Activity::MuscleGroup::LEGS }, Activity::ActivityType::CARDIO,
-        {}, ProfileManager::Level::BEGINNER, "Пробежка");
-    Activity shallow = original;
-    Activity deep = original.deepClone();  // deepClone() возвращает Activity 
-    std::cout << "Клоны созданы" << std::endl;
+    std::cout << "\n--- Выполнение стандартного упражнения ---" << std::endl;
+    std::cout << "Стратегия: " << standardExercise.getExecutionStrategyDescription() << std::endl;
+    standardExercise.execute();
 
-    // Абстрактный класс
-    // FitnessComponent* absEnt = new FitnessComponent();
+    std::cout << "\n--- Выполнение с прогрессивной перегрузкой ---" << std::endl;
+    std::cout << "Стратегия: " << progressiveExercise.getExecutionStrategyDescription() << std::endl;
+    progressiveExercise.execute();
 
-    ProfileManager baseUser("6", "base", 28, ProfileManager::Gender::FEMALE, 165, 58.0,
-        ProfileManager::Goal::LOSE_WEIGHT, ProfileManager::Level::BEGINNER,
-        { ProfileManager::Weekday::MONDAY }, { ProfileManager::Equipment::DUMBBELLS }, true);
-    du = baseUser;
-    std::cout << "Присваивание от base: " << du.getAdditionalInfo() << std::endl;
+    std::cout << "\n--- Выполнение пирамидального упражнения ---" << std::endl;
+    std::cout << "Стратегия: " << pyramidExercise.getExecutionStrategyDescription() << std::endl;
+    pyramidExercise.execute();
 
+    // 2. ДИНАМИЧЕСКОЕ КОНФИГУРИРОВАНИЕ
+    std::cout << "\n\n2. Динамическое конфигурирование стратегий:" << std::endl;
+    std::cout << "==============================================" << std::endl;
+
+    StrengthActivity dynamicExercise("squat_dyn", "Приседания (динамическая стратегия)",
+        { Activity::MuscleGroup::LEGS }, { ProfileManager::Equipment::BARBELL },
+        ProfileManager::Level::BEGINNER, "Приседания со штангой", 3, 12, 60.0);
+
+    std::cout << "\n--- Исходная стратегия ---" << std::endl;
+    std::cout << "Стратегия: " << dynamicExercise.getExecutionStrategyDescription() << std::endl;
+    dynamicExercise.execute();
+
+    std::cout << "\n--- Смена стратегии на прогрессивную перегрузку ---" << std::endl;
+    dynamicExercise.setExecutionStrategy(std::make_unique<ProgressiveOverloadStrategy>(5.0));
+    std::cout << "Новая стратегия: " << dynamicExercise.getExecutionStrategyDescription() << std::endl;
+    dynamicExercise.execute();
+
+    std::cout << "\n--- Смена стратегии на пирамидальную ---" << std::endl;
+    dynamicExercise.setExecutionStrategy(std::make_unique<PyramidStrategy>(10.0, 3));
+    std::cout << "Новая стратегия: " << dynamicExercise.getExecutionStrategyDescription() << std::endl;
+    dynamicExercise.execute();
+
+   
     return 0;
 }
