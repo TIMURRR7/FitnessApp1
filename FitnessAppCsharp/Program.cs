@@ -6,90 +6,52 @@ namespace FitnessApp2
 {
     class Program
     {
+        
         static void Main()
         {
-            Console.OutputEncoding = Encoding.UTF8;
+            // Статическая конфигурация - установка калькулятора по умолчанию
+            Console.WriteLine("Статическая конфигурация:");
+            Activity.DefaultCalculator = new AdvancedCalorieCalculator();
+            Console.WriteLine("Установлен продвинутый калькулятор по умолчанию");
 
+            CardioActivity cardioWithAdvanced = new CardioActivity(8.0);
+            StrengthActivity strengthWithAdvanced = new StrengthActivity(12);
 
-            // 1. Производные классы и наследование
-            Console.WriteLine("Производные классы:");
-            CardioActivity cardio = new CardioActivity(5.0);
-            StrengthActivity strength = new StrengthActivity(10);
-            FlexibilityActivity flexibility = new FlexibilityActivity(30);
-            BalanceActivity balance = new BalanceActivity(7);
+            Console.WriteLine($"Кардио с продвинутым калькулятором: {cardioWithAdvanced.EstimateCalories(10)} калорий");
+            Console.WriteLine($"Силовые с продвинутым калькулятором: {strengthWithAdvanced.EstimateCalories(10)} калорий");
 
-            Console.WriteLine($"Кардио активность: {cardio.Title}");
-            Console.WriteLine($"Силовая активность: {strength.Title}");
-            Console.WriteLine($"Гибкость: {flexibility.Title}");
-            Console.WriteLine($"Баланс: {balance.Title}\n");
+            // Динамическая конфигурация - смена калькулятора во время выполнения
+            Console.WriteLine("\nДинамическая конфигурация:");
+            ICalorieCalculator customCalculator = CustomCalorieCalculator.CreateHarrisBenedictCalculator();
+            cardioWithAdvanced.SetCalculator(customCalculator);
+            Console.WriteLine("Кардио переключен на калькулятор Харриса-Бенедикта");
 
-            // 2. Protected модификатор (доступ к baseCaloriesPerMin)
-            Console.WriteLine("Protected модификатор:");
-            Console.WriteLine($"Базовые калории в минуту (protected): {cardio.GetType().GetField("baseCaloriesPerMin", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(cardio)}");
-            Console.WriteLine($"Калории кардио: {cardio.EstimateCalories(10)}");
-            Console.WriteLine($"Калории силовые: {strength.EstimateCalories(10)}");
-            Console.WriteLine($"Калории гибкость: {flexibility.EstimateCalories(10)}");
-            Console.WriteLine($"Калории баланс: {balance.EstimateCalories(10)}\n");
+            ICalorieCalculator linearCalculator = CustomCalorieCalculator.CreateLinearCalculator(15.5, 50);
+            strengthWithAdvanced.SetCalculator(linearCalculator);
+            Console.WriteLine("Силовые переключены на линейный калькулятор");
 
-            // 3. Перегрузка методов (с вызовом base и без)
-            Console.WriteLine("Перегрузка методов:");
-            Console.WriteLine($"Силовые (с вызовом base): {strength.EstimateCalories(10)}");
-            Console.WriteLine($"Баланс (без вызова base): {balance.EstimateCalories(10)}\n");
+            Console.WriteLine($"Кардио с калькулятором Харриса-Бенедикта: {cardioWithAdvanced.EstimateCalories(10)} калорий");
+            Console.WriteLine($"Силовые с линейным калькулятором: {strengthWithAdvanced.EstimateCalories(10)} калорий");
 
-            // 4. Виртуальные функции и полиморфизм
-            Console.WriteLine("Виртуальные функции:");
-            FitnessComponent profile = new ProfileManager("1", "user", 25, ProfileManager.Gender.Male, 180, 75.0,
-                ProfileManager.Goal.GainMass, ProfileManager.Level.Intermediate);
+            // Демонстрация разных калькуляторов для одной активности
+            Console.WriteLine("\nСравнение калькуляторов для одной активности:");
+            Activity testActivity = new CardioActivity(5.0);
+            int duration = 15;
 
-            profile.CallVirtual(); // Вызов невиртуальной функцией
-            Console.WriteLine($"Полиморфизм через базовый класс: {profile.CalculateSomething()}");
+            testActivity.SetCalculator(new BasicCalorieCalculator());
+            int basicResult = testActivity.EstimateCalories(duration);
 
-            // Демонстрация через указатели
-            Activity activityRef = cardio;
-            Console.WriteLine($"Через указатель на базовый класс: {activityRef.EstimateCalories(10)}");
+            testActivity.SetCalculator(new AdvancedCalorieCalculator());
+            int advancedResult = testActivity.EstimateCalories(duration);
 
-            activityRef = strength;
-            Console.WriteLine($"Через указатель на производный класс: {activityRef.EstimateCalories(10)}\n");
+            testActivity.SetCalculator(CustomCalorieCalculator.CreateLinearCalculator(12.0, 20));
+            int customResult = testActivity.EstimateCalories(duration);
 
-            // 5. Клонирование (поверхностное и глубокое)
-            Console.WriteLine("Клонирование:");
-            Activity original = new CardioActivity(10.0);
-            Activity shallowClone = (Activity)original.Clone();
-            Activity deepClone = original.DeepClone();
+            Console.WriteLine($"Базовый калькулятор: {basicResult} калорий");
+            Console.WriteLine($"Продвинутый калькулятор: {advancedResult} калорий");
+            Console.WriteLine($"Пользовательский калькулятор: {customResult} калорий");
 
-            Console.WriteLine("Оригинал, поверхностный и глубокий клоны созданы");
-            Console.WriteLine($"Оригинал калории: {original.EstimateCalories(10)}");
-            Console.WriteLine($"Поверхностный клон калории: {shallowClone.EstimateCalories(10)}");
-            Console.WriteLine($"Глубокий клон калории: {deepClone.EstimateCalories(10)}\n");
-
-            // 6. Конструкторы производных классов
-            Console.WriteLine("Конструкторы производных классов:");
-            TrackableActivity trackable = new TrackableActivity("track_1", "Отслеживаемая активность",
-                new[] { Activity.MuscleGroup.CHEST, Activity.MuscleGroup.ARMS }, Activity.ActivityType.STRENGTH,
-                new[] { ProfileManager.Equipment.Dumbbells }, Activity.Level.INTERMEDIATE, "Отслеживаемое упражнение");
-            Console.WriteLine($"Trackable активность создана: {trackable.Title}\n");
-
-            // 7. Абстрактные классы
-            Console.WriteLine($"Абстрактный метод GetInfo: {profile.GetInfo()}");
-            FitnessComponent clonedProfile = profile.Clone();
-            Console.WriteLine($"Клонированный объект: {clonedProfile.GetInfo()}\n");
-
-            // 8. Интерфейсы
-            Console.WriteLine("Интерфейсы:");
-            ITrackable trackableInterface = trackable;
-            ICustomizable customizableInterface = trackable;
-
-            trackableInterface.LogProgress(DateTime.Now);
-            trackableInterface.LogProgress(DateTime.Now.AddDays(1));
-            Console.WriteLine($"Отслеживание: {trackableInterface.GetTrackingInfo()}");
-
-            customizableInterface.AddCustomModification("Увеличить вес");
-            customizableInterface.AddCustomModification("Добавить подходы");
-            Console.WriteLine($"Модификации: {string.Join(", ", customizableInterface.GetModifications())}");
-
-            // Множественное наследование (абстрактный класс + интерфейсы)
-            Console.WriteLine($"Множественное наследование - калории баланс с модификациями: {trackable.EstimateCalories(10)}\n");
-
+   
         }
     }
 }
