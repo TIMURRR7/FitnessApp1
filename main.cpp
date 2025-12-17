@@ -8,6 +8,8 @@
 #include "Template_Functions.hpp"
 #include "FitnessProgram.hpp"
 #include "FitnessTracker.hpp"
+#include "CompileTimeDemo.hpp"
+#include "FitnessCalculator.hpp"
 #include <iostream>
 #include <set>
 #include <stdexcept>
@@ -16,30 +18,19 @@
 
 int main() {
     SetConsoleOutputCP(1251);
-   
-  
 
-    // 1. ДЕМОНСТРАЦИЯ ИСПОЛЬЗОВАНИЯ STL
-    std::cout << "\n\n1. Демонстрация использования STL:" << std::endl;
 
-    STL_Demo stlDemo;
-    stlDemo.demonstrateVectorUsage();
-    stlDemo.demonstrateListUsage();
-    stlDemo.demonstrateMapUsage();
-    stlDemo.demonstrateArrayUsage();
+    // 1. ДЕМОНСТРАЦИЯ CONSTEXPR, CONSTEVAL И CONSTINIT
+    std::cout << "1. Демонстрация constexpr, consteval и constinit:" << std::endl;
+    
 
-    // 2. ДЕМОНСТРАЦИЯ ШАБЛОННЫХ ФУНКЦИЙ
-    std::cout << "\n\n2. Демонстрация шаблонных функций:" << std::endl;
- 
+    demonstrateCompileTimeFeatures();
 
-    demonstrateTemplateFunctions();
+    // 2. ДЕМОНСТРАЦИЯ ФИТНЕС-КАЛЬКУЛЯТОРА С COMPILE-TIME ВЫЧИСЛЕНИЯМИ
+    std::cout << "\n\n2. Демонстрация фитнес-калькулятора:" << std::endl;
 
-    // 3. ДЕМОНСТРАЦИЯ ШАБЛОННОГО КЛАССА
-    std::cout << "\n\n3. Демонстрация шаблонного класса:" << std::endl;
- 
 
-    demonstrateFitnessProgram();
-
+    FitnessCalculator::demonstrateFitnessCalculations();
 
 
     return 0;
